@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinPratica - Portale Civico e Fiscale</title>
+    <!-- Google Fonts: Inter & Atkinson Hyperlegible -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandNavy: '#1A1273',
+                        brandNavyDark: '#110B38',
+                        brandCoral: '#F88365',
+                        brandCoralHover: '#E06B4D',
+                        brandCream: '#F4ECE1',
+                        brandCreamDark: '#E6DCCD',
+                        brandCreamCard: '#FBF8F3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        dyslexia: ['Atkinson Hyperlegible', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Reading Guide Focus Line */
+        #reading-guide-mask {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.45);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        
+        .reading-guide-active #reading-guide-mask {
+            display: block;
+        }
+
+        /* High Contrast Theme */
+        .high-contrast {
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        .high-contrast * {
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+            border-color: #FFFF00 !important;
+        }
+        .high-contrast button, .high-contrast a {
+            outline: 2px solid #FFFF00 !important;
+        }
+
+        /* Highlight Headings & Links */
+        .highlight-elements h1, 
+        .highlight-elements h2, 
+        .highlight-elements h3, 
+        .highlight-elements h4 {
+            background-color: #F88365 !important;
+            color: #ffffff !important;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .highlight-elements a {
+            outline: 3px dashed #1A1273 !important;
+            text-decoration: underline !important;
+            font-weight: bold !important;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F4ECE1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #F88365;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1A1273;
+        }
+
+        /* Speech Synthesis Pulse Indicator */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .tts-playing {
+            animation: pulse-ring 1.5s infinite ease-in-out;
+            background-color: #F88365 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body id="app-body" class="bg-brandCream text-brandNavyDark font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Reading Guide Focus Mask -->
+    <div id="reading-guide-mask"></div>
+
+    <!-- Top Utility Bar -->
+    <div class="bg-brandNavyDark text-white text-xs py-2 px-4 sm:px-8 flex justify-between items-center border-b border-brandNavy">
+        <div class="flex items-center space-x-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="txt-status-portal" class="font-medium">Portale Ufficiale di Informazione Civica e Fiscale | Repubblica Italiana</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Language Selector Switcher -->
+            <div class="flex items-center bg-brandNavy rounded-lg p-0.5 border border-white/20">
+                <button id="lang-it-btn" onclick="setLanguage('it')" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-brandCoral text-white shadow-sm flex items-center gap-1.5">
+                    <span>🇮🇹</span> <span>ITALIANO</span>
+                </button>
+                <button id="lang-en-btn" onclick="setLanguage('en')" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-white/80 hover:text-white flex items-center gap-1.5">
+                    <span>🇬🇧</span> <span>ENGLISH</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="sticky top-0 z-40 bg-brandNavy text-white shadow-lg border-b-4 border-brandCoral">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('home')">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brandCoral to-orange-400 flex items-center justify-center text-white text-2xl font-black shadow-md border-2 border-white/30">
+                        FP
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center">
+                            <span class="text-white">FIN</span>
+                            <span class="text-brandCoral ml-0.5">PRATICA</span>
+                        </div>
+                        <p id="txt-logo-sub" class="text-xs text-brandCream/80 font-medium tracking-wide">Semplice. Accessibile. Veloce.</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex space-x-1 lg:space-x-2 font-semibold text-sm">
+                    <button onclick="navigateTo('home')" id="nav-home" class="nav-btn px-3.5 py-2 rounded-lg transition-colors bg-white/10 text-brandCoral font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-house"></i> <span id="txt-nav-home">Home</span>
+                    </button>
+                    <button onclick="navigateTo('finanze')" id="nav-finanze" class="nav-btn px-3.5 py-2 rounded-lg transition-colors hover:bg-white/10 text-white flex items-center gap-2">
+                        <i class="fa-solid fa-wallet"></i> <span id="txt-nav-finanze">Finanze</span>
+                    </button>
+                    <button onclick="navigateTo('pa')" id="nav-pa" class="nav-btn px-3.5 py-2 rounded-lg transition-colors hover:bg-white/10 text-white flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns"></i> <span id="txt-nav-pa">Pubblica Amministrazione</span>
+                    </button>
+                    <button onclick="navigateTo('consigliati')" id="nav-consigliati" class="nav-btn px-3.5 py-2 rounded-lg transition-colors hover:bg-white/10 text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> <span id="txt-nav-consigliati">Consigliati</span>
+                    </button>
+                    <button onclick="navigateTo('novita')" id="nav-novita" class="nav-btn px-3.5 py-2 rounded-lg transition-colors hover:bg-white/10 text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i> <span id="txt-nav-novita">Novità dallo Stato</span>
+                    </button>
+                </nav>
+
+                <!-- Accessibility Drawer Button & Mobile Menu Toggle -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleAccessibilityToolbar()" class="bg-brandCoral hover:bg-brandCoralHover text-white px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition-transform active:scale-95" title="Accessibilità">
+                        <i class="fa-solid fa-universal-access text-base"></i>
+                        <span id="txt-a11y-btn" class="hidden sm:inline">Accessibilità</span>
+                    </button>
+
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-white p-2 rounded-lg bg-white/10 hover:bg-white/20">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brandNavyDark border-t border-brandCoral/30 px-4 py-3 space-y-2">
+            <button onclick="navigateTo('home'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-white font-medium hover:bg-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-house text-brandCoral"></i> <span id="txt-m-home">Home</span>
+            </button>
+            <button onclick="navigateTo('finanze'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-white font-medium hover:bg-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-wallet text-brandCoral"></i> <span id="txt-m-finanze">Finanze</span>
+            </button>
+            <button onclick="navigateTo('pa'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-white font-medium hover:bg-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-building-columns text-brandCoral"></i> <span id="txt-m-pa">Pubblica Amministrazione</span>
+            </button>
+            <button onclick="navigateTo('consigliati'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-white font-medium hover:bg-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-star text-brandCoral"></i> <span id="txt-m-consigliati">Consigliati</span>
+            </button>
+            <button onclick="navigateTo('novita'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-white font-medium hover:bg-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn text-brandCoral"></i> <span id="txt-m-novita">Novità dallo Stato</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Universal Accessibility Panel (Drawer Toggle) -->
+    <div id="a11y-toolbar" class="hidden bg-brandNavyDark text-white border-b-2 border-brandCoral px-4 py-4 shadow-2xl transition-all">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-wheelchair text-brandCoral text-xl"></i>
+                <h3 id="txt-a11y-title" class="font-bold text-sm tracking-wide">STRUMENTI DI ACCESSIBILITÀ UNIVERSALE</h3>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 text-xs">
+                <!-- Text Zoom Controls -->
+                <div class="bg-brandNavy px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2">
+                    <span id="txt-a11y-zoom" class="text-white/70 font-semibold">Testo:</span>
+                    <button onclick="changeFontSize(-1)" class="w-6 h-6 rounded bg-white/20 hover:bg-brandCoral flex items-center justify-center font-bold" title="Riduci Testo">-</button>
+                    <button onclick="resetFontSize()" class="px-2 h-6 rounded bg-white/20 hover:bg-brandCoral flex items-center justify-center font-semibold" title="Reset">100%</button>
+                    <button onclick="changeFontSize(1)" class="w-6 h-6 rounded bg-white/20 hover:bg-brandCoral flex items-center justify-center font-bold" title="Aumenta Testo">+</button>
+                </div>
+
+                <!-- Dyslexia Font Toggle -->
+                <button id="btn-dyslexia" onclick="toggleDyslexiaFont()" class="bg-brandNavy hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-font"></i>
+                    <span id="txt-a11y-dyslexia">Font Alta Leggibilità</span>
+                </button>
+
+                <!-- High Contrast Toggle -->
+                <button id="btn-contrast" onclick="toggleHighContrast()" class="bg-brandNavy hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-circle-half-stroke text-amber-400"></i>
+                    <span id="txt-a11y-contrast">Alto Contrasto</span>
+                </button>
+
+                <!-- Highlight Headings and Links Toggle -->
+                <button id="btn-highlight" onclick="toggleHighlightElements()" class="bg-brandNavy hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-highlighter text-brandCoral"></i>
+                    <span id="txt-a11y-highlight">Evidenzia Link/Titoli</span>
+                </button>
+
+                <!-- Reading Guide Mask Toggle -->
+                <button id="btn-guide" onclick="toggleReadingGuide()" class="bg-brandNavy hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-ruler-horizontal text-emerald-400"></i>
+                    <span id="txt-a11y-guide">Guida di Lettura</span>
+                </button>
+
+                <!-- Global Stop TTS Button -->
+                <button id="btn-stop-tts" onclick="stopSpeech()" class="hidden bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 animate-bounce">
+                    <i class="fa-solid fa-volume-xmark"></i>
+                    <span id="txt-a11y-stop-tts">Interrompi Lettura Audio</span>
+                </button>
+            </div>
+
+            <button onclick="toggleAccessibilityToolbar()" class="text-white/60 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+        <!-- Hero Search & Filter Section -->
+        <section class="bg-gradient-to-br from-brandNavy via-brandNavy to-brandNavyDark rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-brandCoral/30">
+            <!-- Decorative Background Graphic -->
+            <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-brandCoral/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="max-w-3xl mx-auto text-center space-y-4 relative z-10">
+                <h1 id="txt-hero-title" class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                    Trova agevolazioni e prassi burocratiche in modo <span class="text-brandCoral underline decoration-brandCoral/40">Semplice</span>
+                </h1>
+                <p id="txt-hero-subtitle" class="text-base sm:text-lg text-brandCream/90 max-w-2xl mx-auto">
+                    Consulta guide passo-passo, bonus fiscali, decreti aggiornati e adempimenti per cittadini e famiglie.
+                </p>
+
+                <!-- Search Bar -->
+                <div class="pt-2 relative">
+                    <div class="relative flex items-center">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 text-brandNavy text-xl"></i>
+                        <input type="text" id="main-search-input" onkeyup="handleSearchInput()" placeholder="Cerca 'Bonus Casa', '730', 'Esenzione Ticket', 'Bollette'..." 
+                            class="w-full pl-12 pr-12 py-4 rounded-xl text-brandNavyDark bg-white font-medium shadow-2xl focus:outline-none focus:ring-4 focus:ring-brandCoral text-base sm:text-lg placeholder:text-gray-400">
+                        <button onclick="clearSearch()" id="btn-clear-search" class="hidden absolute right-4 text-gray-400 hover:text-brandNavy">
+                            <i class="fa-solid fa-circle-xmark text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tag Chips -->
+                <div class="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs">
+                    <span id="txt-quick-tags" class="text-brandCream/70 font-semibold mr-1">Tag Popolari:</span>
+                    <button onclick="setTagFilter('730')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#730</button>
+                    <button onclick="setTagFilter('INPS')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#INPS</button>
+                    <button onclick="setTagFilter('BonusCasa')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#BonusCasa</button>
+                    <button onclick="setTagFilter('Bollette')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#Bollette</button>
+                    <button onclick="setTagFilter('F24')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#F24</button>
+                    <button onclick="setTagFilter('IRPEF')" class="bg-white/10 hover:bg-brandCoral hover:text-white px-3 py-1 rounded-full border border-white/20 transition">#IRPEF</button>
+                </div>
+            </div>
+
+            <!-- Interactive Profiling Bar -->
+            <div class="mt-8 pt-6 border-t border-white/15 grid grid-cols-1 md:grid-cols-2 gap-4 bg-brandNavyDark/50 p-4 rounded-xl backdrop-blur-sm">
+                <!-- Age Filter -->
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-user-clock text-brandCoral text-xl"></i>
+                    <div class="w-full">
+                        <label id="txt-filter-age-label" class="block text-xs font-semibold uppercase tracking-wider text-brandCream/80 mb-1">Fascia di Età / Profilo</label>
+                        <select id="filter-age" onchange="applyFilters()" class="w-full bg-brandNavy text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brandCoral focus:outline-none">
+                            <option value="all" id="opt-age-all">Tutte le Età</option>
+                            <option value="under30" id="opt-age-under30">Under 30 (Giovani & Student)</option>
+                            <option value="30-50" id="opt-age-3050">30 - 50 Anni (Famiglie & Lavoratori)</option>
+                            <option value="over50" id="opt-age-over50">Over 50 & Pensionati</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Regional Filter -->
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-map-location-dot text-brandCoral text-xl"></i>
+                    <div class="w-full">
+                        <label id="txt-filter-region-label" class="block text-xs font-semibold uppercase tracking-wider text-brandCream/80 mb-1">Regione di Residenza</label>
+                        <select id="filter-region" onchange="applyFilters()" class="w-full bg-brandNavy text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brandCoral focus:outline-none">
+                            <option value="all" id="opt-reg-all">Tutte le Regioni (Nazionali)</option>
+                            <option value="Lombardia">Lombardia</option>
+                            <option value="Lazio">Lazio</option>
+                            <option value="Campania">Campania</option>
+                            <option value="Sicilia">Sicilia</option>
+                            <option value="Veneto">Veneto</option>
+                            <option value="Piemonte">Piemonte</option>
+                            <option value="Emilia-Romagna">Emilia-Romagna</option>
+                            <option value="Puglia">Puglia</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Filter Bar Status -->
+        <div id="filter-status-bar" class="hidden bg-brandCreamDark/60 border border-brandNavy/10 rounded-xl p-3 flex justify-between items-center text-xs font-semibold">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-filter text-brandCoral"></i>
+                <span id="filter-status-text">Filtri attivi: ...</span>
+            </div>
+            <button onclick="resetAllFilters()" class="text-brandCoral hover:underline font-bold flex items-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> <span id="txt-reset-filters">Ripristina Filtri</span>
+            </button>
+        </div>
+
+        <!-- VIEW: Home / Articles Overview -->
+        <div id="view-container">
+            <!-- Dynamic Section Title -->
+            <div class="flex justify-between items-center mb-6 border-b border-brandNavy/10 pb-3">
+                <div>
+                    <h2 id="view-title" class="text-2xl font-extrabold text-brandNavy flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-brandCoral"></i>
+                        <span>Tutti gli Articoli e le Guide</span>
+                    </h2>
+                    <p id="view-subtitle" class="text-sm text-gray-600 mt-0.5">Procedure civiche e fiscali verificate aggiornate al 2026</p>
+                </div>
+                <span id="results-count" class="bg-brandNavy text-white px-3 py-1 rounded-full text-xs font-bold">
+                    9 Risultati
+                </span>
+            </div>
+
+            <!-- Category Columns / Grid -->
+            <div id="articles-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Articles will be dynamically rendered here by JavaScript -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="no-results" class="hidden text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300 p-8">
+                <i class="fa-solid fa-folder-open text-5xl text-brandCoral mb-3"></i>
+                <h3 id="txt-no-results-title" class="text-xl font-bold text-brandNavy">Nessun articolo trovato</h3>
+                <p id="txt-no-results-desc" class="text-sm text-gray-600 mt-1">Nessuna procedura corrisponde ai filtri impostati. Prova a modificare i termini di ricerca.</p>
+                <button onclick="resetAllFilters()" class="mt-4 bg-brandNavy text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-brandNavyDark transition">
+                    Mostra Tutti gli Articoli
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Article Full View Modal -->
+    <div id="article-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border-2 border-brandNavy overflow-hidden my-auto">
+            
+            <!-- Modal Header -->
+            <div class="bg-brandNavy text-white p-6 flex justify-between items-start border-b-4 border-brandCoral">
+                <div>
+                    <span id="modal-category" class="inline-block text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-brandCoral text-white mb-2">
+                        FINANZE
+                    </span>
+                    <h2 id="modal-title" class="text-2xl font-black leading-snug">
+                        Titolo Articolo
+                    </h2>
+                </div>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition ml-4">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Bar with TTS Player Controls -->
+            <div class="bg-brandCream p-3 px-6 border-b border-brandCreamDark flex justify-between items-center text-xs">
+                <div class="flex items-center space-x-2 text-gray-600 font-medium">
+                    <i class="fa-solid fa-clock"></i>
+                    <span id="modal-date">Aggiornato al 2026</span>
+                </div>
+                <!-- Text To Speech Controls -->
+                <button id="modal-tts-btn" onclick="speakCurrentArticle()" class="bg-brandCoral hover:bg-brandCoralHover text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 shadow-sm transition">
+                    <i class="fa-solid fa-volume-high"></i>
+                    <span id="txt-modal-tts">Ascolta Articolo (Sintesi Vocale)</span>
+                </button>
+            </div>
+
+            <!-- Modal Content (Strict Bulleted Structure) -->
+            <div id="modal-body" class="p-6 sm:p-8 overflow-y-auto space-y-6 text-sm sm:text-base leading-relaxed text-brandNavyDark">
+                <!-- Content injected dynamically -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 p-4 px-6 border-t border-gray-200 flex justify-between items-center">
+                <span id="modal-region-badge" class="text-xs bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold">
+                    Regione: Tutte
+                </span>
+                <button onclick="closeModal()" class="bg-brandNavy text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-brandNavyDark transition">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Assistant Button -->
+    <div class="fixed bottom-6 right-6 z-40">
+        <button onclick="toggleAiDrawer()" class="group relative bg-brandCoral hover:bg-brandCoralHover text-white p-4 rounded-full shadow-2xl transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center border-2 border-white">
+            <i class="fa-solid fa-robot text-2xl"></i>
+            <span class="absolute -top-1 -right-1 bg-brandNavy text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">AI</span>
+            <!-- Tooltip -->
+            <span class="absolute right-16 bg-brandNavy text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                Assistente Civico Gemini
+            </span>
+        </button>
+    </div>
+
+    <!-- AI Chat Drawer Container -->
+    <div id="ai-drawer" class="hidden fixed bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[420px] h-[580px] z-50 bg-white rounded-2xl shadow-2xl border-2 border-brandNavy flex flex-col overflow-hidden transition-all">
+        
+        <!-- Drawer Header -->
+        <div class="bg-brandNavy text-white p-4 flex justify-between items-center border-b-2 border-brandCoral">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-brandCoral flex items-center justify-center text-white text-lg">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm leading-tight flex items-center gap-1.5">
+                        <span>Chiedi ad ALLAI (Gemini)</span>
+                        <span class="bg-emerald-500 w-2 h-2 rounded-full inline-block"></span>
+                    </h3>
+                    <p id="txt-ai-subtitle" class="text-[11px] text-brandCream/80">Supporto Fiscale & Burocratico h24</p>
+                </div>
+            </div>
+            <button onclick="toggleAiDrawer()" class="text-white/70 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 bg-brandCream/30 text-xs sm:text-sm">
+            <!-- Welcome Message -->
+            <div class="bg-white p-3.5 rounded-2xl rounded-tl-none border border-brandCreamDark shadow-sm max-w-[88%] text-brandNavyDark space-y-2">
+                <p id="txt-ai-welcome">
+                    👋 <strong>Buongiorno! Sono il tuo assistente civico FinPratica.</strong>
+                </p>
+                <p id="txt-ai-welcome-2">
+                    Posso aiutarti a comprendere cartelle, modelli 730, agevolazioni e requisiti ISEE in modo semplice. Può anche caricare una foto o un PDF di una bolletta o documento F24 per un'analisi rapida!
+                </p>
+            </div>
+        </div>
+
+        <!-- Simulated Document Upload Dropzone Bar -->
+        <div id="upload-preview" class="hidden bg-amber-50 p-2 px-4 border-t border-amber-200 text-xs flex justify-between items-center text-amber-900">
+            <span class="truncate flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-red-500"></i>
+                <span id="upload-file-name">documento_fiscale.pdf</span>
+            </span>
+            <button onclick="removeUpload()" class="text-amber-700 font-bold hover:text-red-600">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+
+        <!-- Chat Input & Quick Actions -->
+        <div class="p-3 bg-white border-t border-gray-200 space-y-2">
+            <!-- Quick Prompts Chips -->
+            <div class="flex gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
+                <button onclick="sendQuickPrompt('Come funziona il Bonus Prima Casa?')" class="bg-brandCream hover:bg-brandCoral hover:text-white text-brandNavy px-2.5 py-1 rounded-full whitespace-nowrap transition font-medium border border-brandCreamDark">
+                    🏠 Bonus Casa
+                </button>
+                <button onclick="sendQuickPrompt('Cosa significa la dicitura F24?')" class="bg-brandCream hover:bg-brandCoral hover:text-white text-brandNavy px-2.5 py-1 rounded-full whitespace-nowrap transition font-medium border border-brandCreamDark">
+                    📄 Cos'è F24?
+                </button>
+                <button onclick="sendQuickPrompt('Come calcolare ISEE?')" class="bg-brandCream hover:bg-brandCoral hover:text-white text-brandNavy px-2.5 py-1 rounded-full whitespace-nowrap transition font-medium border border-brandCreamDark">
+                    📊 Calcolo ISEE
+                </button>
+            </div>
+
+            <!-- Input Box -->
+            <div class="flex items-center gap-2">
+                <!-- File Upload Trigger -->
+                <label class="cursor-pointer bg-brandCream hover:bg-brandCreamDark text-brandNavy p-2.5 rounded-xl border border-brandCreamDark transition flex items-center justify-center" title="Carica Modello/Bolletta">
+                    <i class="fa-solid fa-paperclip text-base"></i>
+                    <input type="file" id="file-upload-input" onchange="handleFileUpload(event)" accept="image/*,.pdf" class="hidden">
+                </label>
+
+                <!-- Text Input -->
+                <input type="text" id="ai-chat-input" onkeydown="if(event.key === 'Enter') sendChatMessage()" placeholder="Scrivi una domanda o allega un file..." class="flex-grow bg-gray-100 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brandCoral">
+
+                <!-- Send Button -->
+                <button onclick="sendChatMessage()" class="bg-brandCoral hover:bg-brandCoralHover text-white px-3.5 py-2 rounded-xl transition shadow-sm font-bold flex items-center justify-center">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-brandNavyDark text-white pt-10 pb-6 border-t-4 border-brandCoral mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-xs sm:text-sm">
+                <!-- Brand Info -->
+                <div class="space-y-3">
+                    <div class="text-2xl font-black flex items-center">
+                        <span class="text-white">FIN</span>
+                        <span class="text-brandCoral ml-0.5">PRATICA</span>
+                    </div>
+                    <p id="txt-footer-desc" class="text-brandCream/70 leading-relaxed">
+                        Iniziativa aperta per la trasparenza burocratica, la semplificazione delle scadenze e il diritto di accesso alle agevolazioni pubbliche.
+                    </p>
+                </div>
+
+                <!-- Fast Links -->
+                <div>
+                    <h4 id="txt-footer-col1" class="font-bold text-brandCoral uppercase tracking-wider mb-3">Sezioni Principali</h4>
+                    <ul class="space-y-2 text-brandCream/80">
+                        <li><a href="#" onclick="navigateTo('finanze')" class="hover:underline">Finanze & Bonus Fiscali</a></li>
+                        <li><a href="#" onclick="navigateTo('pa')" class="hover:underline">Pubblica Amministrazione</a></li>
+                        <li><a href="#" onclick="navigateTo('consigliati')" class="hover:underline">Guide Personalizzate</a></li>
+                        <li><a href="#" onclick="navigateTo('novita')" class="hover:underline">Novità & Decreti 2026</a></li>
+                    </ul>
+                </div>
+
+                <!-- Official Portals -->
+                <div>
+                    <h4 id="txt-footer-col2" class="font-bold text-brandCoral uppercase tracking-wider mb-3">Portali Istituzionali</h4>
+                    <ul class="space-y-2 text-brandCream/80">
+                        <li><a href="https://www.agenziaentrate.gov.it" target="_blank" class="hover:underline flex items-center gap-1">Agenzia delle Entrate <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a></li>
+                        <li><a href="https://www.inps.it" target="_blank" class="hover:underline flex items-center gap-1">INPS Italia <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a></li>
+                        <li><a href="https://www.governo.it" target="_blank" class="hover:underline flex items-center gap-1">Governo Italiano <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a></li>
+                        <li><a href="https://www.spid.gov.it" target="_blank" class="hover:underline flex items-center gap-1">Portale SPID / CIE <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a></li>
+                    </ul>
+                </div>
+
+                <!-- Accessibility Statement -->
+                <div>
+                    <h4 id="txt-footer-col3" class="font-bold text-brandCoral uppercase tracking-wider mb-3">Dichiarazione Accessibilità</h4>
+                    <p id="txt-footer-a11y-desc" class="text-brandCream/70 leading-relaxed mb-2">
+                        Progettato secondo le Linee Guida WCAG 2.1 AAA per garantire la massima fruibilità da ogni dispositivo e utente.
+                    </p>
+                    <span class="inline-block bg-white/10 text-emerald-400 px-2.5 py-1 rounded text-xs font-semibold border border-emerald-400/30">
+                        ✓ WCAG 2.1 AAA Compliant
+                    </span>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright -->
+            <div class="border-t border-white/10 pt-6 text-center text-xs text-brandCream/60 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p id="txt-footer-copyright">© 2026 FinPratica - Portale Civico e Fiscale. Tutti i diritti riservati.</p>
+                <div class="flex items-center space-x-4">
+                    <span class="hover:underline cursor-pointer">Privacy Policy</span>
+                    <span>•</span>
+                    <span class="hover:underline cursor-pointer">Note Legali</span>
+                    <span>•</span>
+                    <span class="hover:underline cursor-pointer">Mappa del Sito</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        
+        // Application State
+        const state = {
+            lang: 'it',
+            currentView: 'home', // 'home', 'finanze', 'pa', 'consigliati', 'novita'
+            searchQuery: '',
+            filterAge: 'all',
+            filterRegion: 'all',
+            fontSizeOffset: 0,
+            isDyslexiaFont: false,
+            isHighContrast: false,
+            isHighlightElements: false,
+            isReadingGuide: false,
+            uploadedFile: null,
+            currentlySpeakingText: null
+        };
+
+        // Complete Bilingual Translation Dictionary
+        const translations = {
+            it: {
+                statusPortal: "Portale Ufficiale di Informazione Civica e Fiscale | Repubblica Italiana",
+                logoSub: "Semplice. Accessibile. Veloce.",
+                navHome: "Home",
+                navFinanze: "Finanze",
+                navPa: "Pubblica Amministrazione",
+                navConsigliati: "Consigliati",
+                navNovita: "Novità dallo Stato",
+                a11yBtn: "Accessibilità",
+                a11yTitle: "STRUMENTI DI ACCESSIBILITÀ UNIVERSALE",
+                a11yZoom: "Testo:",
+                a11yDyslexia: "Font Alta Leggibilità",
+                a11yContrast: "Alto Contrasto",
+                a11yHighlight: "Evidenzia Link/Titoli",
+                a11yGuide: "Guida di Lettura",
+                a11yStopTts: "Interrompi Audio",
+                heroTitle: "Trova agevolazioni e prassi burocratiche in modo <span class='text-brandCoral underline decoration-brandCoral/40'>Semplice</span>",
+                heroSubtitle: "Consulta guide passo-passo, bonus fiscali, decreti aggiornati e adempimenti per cittadini e famiglie.",
+                searchPlaceholder: "Cerca 'Bonus Casa', '730', 'Esenzione Ticket', 'Bollette'...",
+                quickTags: "Tag Popolari:",
+                ageLabel: "Fascia di Età / Profilo",
+                regionLabel: "Regione di Residenza",
+                ageAll: "Tutte le Età",
+                ageUnder30: "Under 30 (Giovani & Studenti)",
+                age3050: "30 - 50 Anni (Famiglie & Lavoratori)",
+                ageOver50: "Over 50 & Pensionati",
+                regAll: "Tutte le Regioni (Nazionali)",
+                resetFilters: "Ripristina Filtri",
+                noResultsTitle: "Nessun articolo trovato",
+                noResultsDesc: "Nessuna procedura corrisponde ai filtri impostati. Prova a modificare i termini di ricerca.",
+                modalTts: "Ascolta Articolo (Sintesi Vocale)",
+                aiSubtitle: "Supporto Fiscale & Burocratico h24",
+                aiWelcome: "👋 <strong>Buongiorno! Sono il tuo assistente civico FinPratica.</strong>",
+                aiWelcome2: "Posso aiutarti a comprendere cartelle, modelli 730, agevolazioni e requisiti ISEE in modo semplice. Puoi anche caricare una foto o un PDF per un'analisi rapida!",
+                readMore: "Leggi Tutto l'Articolo",
+                secFinanze: "1. FINANZE E FISCO",
+                secPA: "2. PUBBLICA AMMINISTRAZIONE",
+                secConsigliati: "GUIDE CONSIGLIATE PER TE",
+                secNovita: "ULTIMI DECRETI E NOVITÀ 2026",
+                secFinanzeSub: "Bollette, Stipendio, Casa, Banca, Tasse, Bonus",
+                secPASub: "Agenzia Entrate, INPS, Comune/Regione, Sanità",
+                secConsigliatiSub: "Selezionate in base all'età e regione impostate",
+                secNovitaSub: "Comunicati ufficiali e aggiornamenti normativi recenti",
+                overview: "📌 In sintesi",
+                requirements: "📋 Requisiti principali",
+                benefits: "💶 Importi e Vantaggi",
+                deadlines: "📅 Scadenze da ricordare",
+                howToApply: "📲 Come fare domanda",
+                officialLinks: "🔗 Link e Portali Ufficiali",
+            },
+            en: {
+                statusPortal: "Official Civic & Tax Information Portal | Italian Republic",
+                logoSub: "Simple. Accessible. Fast.",
+                navHome: "Home",
+                navFinanze: "Finance & Tax",
+                navPa: "Public Admin",
+                navConsigliati: "Recommended",
+                navNovita: "State News",
+                a11yBtn: "Accessibility",
+                a11yTitle: "UNIVERSAL ACCESSIBILITY TOOLBAR",
+                a11yZoom: "Text:",
+                a11yDyslexia: "High Legibility Font",
+                a11yContrast: "High Contrast",
+                a11yHighlight: "Highlight Links/Titles",
+                a11yGuide: "Reading Mask Guide",
+                a11yStopTts: "Stop Audio",
+                heroTitle: "Find subsidies and civic procedures in a <span class='text-brandCoral underline decoration-brandCoral/40'>Simple</span> way",
+                heroSubtitle: "Browse step-by-step guides, tax bonuses, updated decrees, and requirements for citizens and families.",
+                searchPlaceholder: "Search 'Housing Bonus', 'Tax Return', 'Bill Relief'...",
+                quickTags: "Popular Tags:",
+                ageLabel: "Age Group / Profile",
+                regionLabel: "Region of Residence",
+                ageAll: "All Ages",
+                ageUnder30: "Under 30 (Youth & Students)",
+                age3050: "30 - 50 Years (Families & Workers)",
+                ageOver50: "Over 50 & Seniors",
+                regAll: "All Regions (National)",
+                resetFilters: "Reset All Filters",
+                noResultsTitle: "No articles found",
+                noResultsDesc: "No procedures match your search or filter settings. Try clearing active filters.",
+                modalTts: "Listen to Article (Text-to-Speech)",
+                aiSubtitle: "24/7 Tax & Bureaucracy Support",
+                aiWelcome: "👋 <strong>Hello! I am your FinPratica civic AI assistant.</strong>",
+                aiWelcome2: "I can help you understand tax notices, 730 tax forms, subsidies, and ISEE income requirements. You can also upload a document or bill for instant analysis!",
+                readMore: "Read Full Article",
+                secFinanze: "1. FINANCE & TAXES",
+                secPA: "2. PUBLIC ADMINISTRATION",
+                secConsigliati: "RECOMMENDED GUIDES FOR YOU",
+                secNovita: "LATEST STATE DECREES 2026",
+                secFinanzeSub: "Utility Bills, Salary, Housing, Banking, Tax Relief",
+                secPASub: "Revenue Agency, INPS, Regional Government, Health Service",
+                secConsigliatiSub: "Tailored according to your age and regional preferences",
+                secNovitaSub: "Official press releases and recent legal updates",
+                overview: "📌 Overview",
+                requirements: "📋 Main Requirements",
+                benefits: "💶 Amounts & Benefits",
+                deadlines: "📅 Key Deadlines",
+                howToApply: "📲 How to Apply",
+                officialLinks: "🔗 Official Government Links",
+            }
+        };
+
+        const articlesDatabase = [
+            {
+                id: "bonus-prima-casa",
+                category: "FINANZE",
+                categoryKey: "finanze",
+                ageGroup: "under30",
+                region: "all",
+                tags: ["BonusCasa", "Under36", "Mutui", "730"],
+                title: {
+                    it: "Bonus Prima Casa Under 36 (Proroga 2026)",
+                    en: "First Home Subsidy Under 36 (2026 Extension)"
+                },
+                summary: {
+                    it: "Esenzione dall'imposta di registro, ipotecaria e catastale per l'acquisto della prima abitazione.",
+                    en: "Tax exemption on registration, mortgage, and cadastral taxes for purchasing your first home."
+                },
+                content: {
+                    it: {
+                        sintesi: "Agevolazione fiscale diretta per i giovani che acquistano la prima casa di abitazione con garanzia statale Consap sui mutui fino all'80%.",
+                        requisiti: [
+                            "Età inferiore a 36 anni nell'anno di stipula dell'atto notarile.",
+                            "Indicatore ISEE ordinario non superiore a 40.000 € all'anno.",
+                            "Non essere titolari di diritti di proprietà su altri immobili ad uso abitativo nel medesimo comune."
+                        ],
+                        importi: [
+                            "Esenzione al 100% dell'imposta di registro, ipotecaria e catastale.",
+                            "Credito d'imposta pari all'IVA corrisposta in caso di acquisto da impresa costruttrice.",
+                            "Garanzia del Fondo Consap fino all'80% della quota capitale del mutuo."
+                        ],
+                        scadenze: "Valido per tutti i rogiti stipulati entro il 31 Dicembre 2026.",
+                        comeFare: "Richiedere il modulo Consap direttamente presso la banca erogatrice del mutuo prima del rogito notarile.",
+                        links: [
+                            { name: "Agenzia delle Entrate - Guida Prima Casa", url: "https://www.agenziaentrate.gov.it" },
+                            { name: "Consap - Fondo Garanzia Mutui", url: "https://www.consap.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Direct tax benefit for young adults purchasing their primary home with a state-backed Consap guarantee up to 80% on mortgage.",
+                        requisiti: [
+                            "Under 36 years old in the calendar year of purchase contract.",
+                            "Maximum ISEE annual household income statement below €40,000.",
+                            "No existing ownership of other residential property in the same municipality."
+                        ],
+                        importi: [
+                            "100% exemption from land registry, mortgage, and cadastral taxes.",
+                            "Tax credit equal to VAT paid if buying directly from a property builder.",
+                            "Consap State Guarantee covering up to 80% of mortgage principal."
+                        ],
+                        scadenze: "Valid for all deeds completed before December 31, 2026.",
+                        comeFare: "Apply for the Consap form directly at your bank prior to signing the final deed with the notary.",
+                        links: [
+                            { name: "Revenue Agency - First Home Guide", url: "https://www.agenziaentrate.gov.it" },
+                            { name: "Consap - Mortgage Fund", url: "https://www.consap.it" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: "assegno-unico",
+                category: "PUBBLICA AMMINISTRAZIONE",
+                categoryKey: "pa",
+                ageGroup: "30-50",
+                region: "all",
+                tags: ["INPS", "Famiglie", "Figli", "IRPEF"],
+                title: {
+                    it: "Assegno Unico e Universale per i Figli 2026",
+                    en: "Single Universal Child Allowance 2026"
+                },
+                summary: {
+                    it: "Sostegno economico mensile erogato dall'INPS per ogni figlio a carico dal settimo mese di gravidanza fino a 21 anni.",
+                    en: "Monthly financial aid paid by INPS for every dependent child from the 7th month of pregnancy up to age 21."
+                },
+                content: {
+                    it: {
+                        sintesi: "Prestazione mensile corrisposta direttamente sul conto corrente bancario dei genitori per sostenere le spese di crescita dei figli.",
+                        requisiti: [
+                            "Essere cittadini italiani, UE o con regolare permesso di soggiorno per motivi di lavoro/ricerca.",
+                            "Residenza in Italia da almeno 2 anni anche non continuativi.",
+                            "Presentazione di un ISEE in corso di validità per determinare l'importo spettante."
+                        ],
+                        importi: [
+                            "Da un minimo di 57 €/mese per figlio (senza ISEE) fino a 199,40 €/mese per ISEE fino a 17.090 €.",
+                            "Maggiorazioni per figli disabili, madri under 21 e famiglie con più di 3 figli."
+                        ],
+                        scadenze: "Presentare DSU/ISEE entro il 28 Febbraio di ogni anno per evitare l'erogazione dell'importo minimo.",
+                        comeFare: "Domanda online tramite portale INPS con SPID/CIE oppure tramite Patronato convenzionato.",
+                        links: [
+                            { name: "INPS - Portale Assegno Unico", url: "https://www.inps.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Monthly payment made directly into parents' bank account to assist with child upbringing expenses.",
+                        requisiti: [
+                            "Italian/EU citizenship or valid long-term work/research residency permit.",
+                            "Residency in Italy for at least 2 years.",
+                            "Submission of a valid ISEE financial evaluation to calculate full allowance tier."
+                        ],
+                        importi: [
+                            "From €57/month per child (without ISEE) up to €199.40/month for ISEE under €17,090.",
+                            "Extra bonuses for children with disabilities, young mothers under 21, and large families."
+                        ],
+                        scadenze: "Submit updated ISEE by February 28 each year to secure maximum payout rates.",
+                        comeFare: "Apply online through the INPS portal using SPID/CIE digital ID or via an authorized Patronato center.",
+                        links: [
+                            { name: "INPS - Universal Allowance Portal", url: "https://www.inps.it" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: "bonus-bollette",
+                category: "FINANZE",
+                categoryKey: "finanze",
+                ageGroup: "all",
+                region: "all",
+                tags: ["Bollette", "Luce", "Gas", "INPS"],
+                title: {
+                    it: "Bonus Sociale Bollette Luce e Gas 2026",
+                    en: "Electricity & Gas Social Utility Bill Bonus 2026"
+                },
+                summary: {
+                    it: "Sconto automatico sulla fattura dell'energia elettrica e del gas per i nuclei familiari in disagio economico.",
+                    en: "Automatic discount applied directly on electricity and gas bills for qualifying low-income households."
+                },
+                content: {
+                    it: {
+                        sintesi: "Sconto automatico in bolletta gestito dall'ARERA in collaborazione con INPS, senza bisogno di compilare moduli cartacei.",
+                        requisiti: [
+                            "ISEE ordinario inferiore a 9.530 € per nuclei con massimo 3 figli a carico.",
+                            "ISEE inferiore a 20.000 € per famiglie numerose con almeno 4 figli a carico.",
+                            "Fornitura elettrica/gas attiva ad uso domestico e intestata ad un componente del nucleo ISEE."
+                        ],
+                        importi: [
+                            "Sconto accreditato direttamente nelle bollette mensili/bimestrali in base al numero di componenti familiari."
+                        ],
+                        scadenze: "Erogato automaticamente previa presentazione della DSU annuale per il calcolo ISEE.",
+                        comeFare: "È sufficiente compilare la Dichiarazione Sostitutiva Unica (DSU) per ottenere l'ISEE. L'INPS trasmetterà i dati direttamente ad ARERA.",
+                        links: [
+                            { name: "ARERA - Bonus Sociale", url: "https://www.arera.it" },
+                            { name: "INPS - DSU Precompilata", url: "https://www.inps.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Automatic bill credit managed by ARERA and INPS, requiring no paper application forms.",
+                        requisiti: [
+                            "Annual ISEE below €9,530 for families with up to 3 children.",
+                            "Annual ISEE below €20,000 for large families with 4 or more children.",
+                            "Active domestic utility contract in the name of a household member."
+                        ],
+                        importi: [
+                            "Discount credited automatically on monthly or bi-monthly utility statements."
+                        ],
+                        scadenze: "Automatically renewed upon updating annual ISEE declaration.",
+                        comeFare: "Simply submit your annual DSU tax statement for ISEE. INPS automatically syncs data with the energy provider.",
+                        links: [
+                            { name: "ARERA - Energy Social Bonus", url: "https://www.arera.it" },
+                            { name: "INPS - DSU Portal", url: "https://www.inps.it" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: "modello-730",
+                category: "FINANZE",
+                categoryKey: "finanze",
+                ageGroup: "all",
+                region: "all",
+                tags: ["730", "IRPEF", "F24", "Tasse"],
+                title: {
+                    it: "Modello 730/2026 Precompilato Semplificato",
+                    en: "Simplified Pre-filled 730 Tax Return 2026"
+                },
+                summary: {
+                    it: "Dichiarazione dei redditi semplificata guidata per lavoratori dipendenti e pensionati con conguaglio direttamente in busta paga.",
+                    en: "Guided simplified annual income tax return for employees and retirees with direct paycheck reimbursement."
+                },
+                content: {
+                    it: {
+                        sintesi: "Modalità semplificata di presentazione della dichiarazione dei redditi tramite portale Agenzia delle Entrate.",
+                        requisiti: [
+                            "Avere percepito nel 2025 redditi da lavoro dipendente, pensione o assimilati.",
+                            "Possesso di credenziali SPID, CIE (Carta d'Identità Elettronica) o CNS."
+                        ],
+                        importi: [
+                            "Detrazione al 19% per spese mediche, istruzione, mutui, sport figli e veterinari.",
+                            "Rimborso fiscale accreditato nella busta paga di Luglio o nella pensione di Agosto."
+                        ],
+                        scadenze: "Apertura consultazione ad Aprile 2026; termine ultimo di invio il 30 Settembre 2026.",
+                        comeFare: "Accedere all'area riservata su agenziaentrate.gov.it, verificare i dati precaricati e confermare o modificare l'invio.",
+                        links: [
+                            { name: "Agenzia delle Entrate - Portale 730", url: "https://www.agenziaentrate.gov.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Simplified online income declaration portal operated by the Italian Revenue Agency.",
+                        requisiti: [
+                            "Earned salary, pension, or eligible contract income in 2025.",
+                            "Valid SPID or CIE digital identity credentials."
+                        ],
+                        importi: [
+                            "19% tax deduction on medical expenses, education, mortgage interest, and sports activities.",
+                            "Tax refunds directly deposited into July salary or August pension statement."
+                        ],
+                        scadenze: "Portal opens April 2026; final filing deadline is September 30, 2026.",
+                        comeFare: "Log into agenziaentrate.gov.it, review pre-filled medical/insurance data, and approve with 1 click.",
+                        links: [
+                            { name: "Revenue Agency - 730 Pre-filled Portal", url: "https://www.agenziaentrate.gov.it" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: "esenzione-ticket-lazio",
+                category: "PUBBLICA AMMINISTRAZIONE",
+                categoryKey: "pa",
+                ageGroup: "over50",
+                region: "Lazio",
+                tags: ["Sanità", "Esenzione", "Lazio", "Over50"],
+                title: {
+                    it: "Esenzione Ticket Sanitario per Reddito ed Età (Lazio)",
+                    en: "Healthcare Ticket Exemption by Income & Age (Lazio)"
+                },
+                summary: {
+                    it: "Esenzione totale dal pagamento del ticket per visite specialistiche ed esami diagnostici per cittadini over 65 ed esenti E01-E04.",
+                    en: "Full exemption from copayments on medical specialist consultations and tests for Lazio residents."
+                },
+                content: {
+                    it: {
+                        sintesi: "Sostegno sanitario della Regione Lazio per garantire l'accesso gratuito alle cure primarie e agli esami di laboratorio.",
+                        requisiti: [
+                            "Residenza anagrafica nella Regione Lazio.",
+                            "Codice E01: Cittadini di età inferiore a 6 anni o superiore a 65 anni con reddito familiare inferiore a 36.151,98 €.",
+                            "Codice E02: Disoccupati e familiari a carico con reddito inferiore a 8.263,31 €."
+                        ],
+                        importi: [
+                            "Copertura al 100% del costo delle prestazioni sanitarie e analisi nei centri ASL convenzionati."
+                        ],
+                        scadenze: "Rinnovo automatico annuale al 31 Marzo verificato tramite banca dati Tessera Sanitaria.",
+                        comeFare: "Verificare la presenza del codice di esenzione sulla ricetta del medico di base o tramite il portale Salute Lazio.",
+                        links: [
+                            { name: "Salute Lazio - Portale Esenzioni", url: "https://www.salutelazio.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Lazio Regional Health Service initiative ensuring free diagnostic procedures for seniors and qualifying incomes.",
+                        requisiti: [
+                            "Official residency in the Lazio Region.",
+                            "Code E01: Citizens under 6 or over 65 with household income below €36,151.98.",
+                            "Code E02: Unemployed citizens with household income below €8,263.31."
+                        ],
+                        importi: [
+                            "100% coverage of medical diagnostic costs across public ASL healthcare centers."
+                        ],
+                        scadenze: "Annual automatic renewal verified on March 31 via Health Card database.",
+                        comeFare: "Check your exemption code status on your GP prescription or on the Salute Lazio regional portal.",
+                        links: [
+                            { name: "Salute Lazio Portal", url: "https://www.salutelazio.it" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: "efficientamento-lombardia",
+                category: "PUBBLICA AMMINISTRAZIONE",
+                categoryKey: "pa",
+                ageGroup: "all",
+                region: "Lombardia",
+                tags: ["Lombardia", "BonusCasa", "Efficientamento", "PA"],
+                title: {
+                    it: "Contributi Efficientamento Energetico Edifici (Lombardia)",
+                    en: "Building Energy Efficiency Grants (Lombardy Region)"
+                },
+                summary: {
+                    it: "Incentivi a fondo perduto per la sostituzione di impianti termici e installazione di pannelli solari in Regione Lombardia.",
+                    en: "Non-repayable regional grants for heating replacement and solar installation in Lombardy."
+                },
+                content: {
+                    it: {
+                        sintesi: "Bando regionale per abbattere le emissioni inquinanti e promuovere le energie rinnovabili nelle abitazioni private.",
+                        requisiti: [
+                            "Proprietari di immobili residenziali situati nel territorio della Regione Lombardia.",
+                            "Sostituzione di vecchie caldaie con pompe di calore ad alta efficienza o impianti a biomasse a zero emissioni."
+                        ],
+                        importi: [
+                            "Contributo a fondo perduto fino al 50% della spesa ammissibile, con un massimo di 12.000 € per immobile."
+                        ],
+                        scadenze: "Presentazione domande tramite piattaforma Bandi Online entro il 15 Novembre 2026.",
+                        comeFare: "Inviare la richiesta tecnica corredata da diagnosi energetica (APE) tramite il portale regionale BandiOnline Lombardia.",
+                        links: [
+                            { name: "Regione Lombardia - Bandi Online", url: "https://www.bandi.regione.lombardia.it" }
+                        ]
+                    },
+                    en: {
+                        sintesi: "Lombardy regional grant designed to cut carbon emissions and promote renewable heating systems.",
+                        requisiti: [
+                            "Owners of residential properties located within Lombardy.",
+                            "Replacement of old boilers with high-efficiency heat pumps or zero-emission biomass systems."
+                        ],
+                        importi: [
+                            "Direct non-repayable grant covering up to 50% of eligible costs, capped at €12,000 per home."
+                        ],
+                        scadenze: "Application window open on BandiOnline portal until November 15, 2026.",
+                        comeFare: "Submit technical request along with Energy Performance Certificate (APE) via Lombardy BandiOnline portal.",
+                        links: [
+                            { name: "Lombardy Region BandiOnline", url: "https://www.bandi.regione.lombardia.it" }
+                        ]
+                    }
+                }
+            }
+        ];
+
+
+        // Initialize Application Page
+        window.addEventListener('load', () => {
+            renderArticles();
+            updateUIStrings();
+        });
+
+        // Language Switcher Function
+        function setLanguage(lang) {
+            state.lang = lang;
+            const itBtn = document.getElementById('lang-it-btn');
+            const enBtn = document.getElementById('lang-en-btn');
+
+            if (lang === 'it') {
+                itBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-brandCoral text-white shadow-sm flex items-center gap-1.5";
+                enBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-white/80 hover:text-white flex items-center gap-1.5";
+            } else {
+                enBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-brandCoral text-white shadow-sm flex items-center gap-1.5";
+                itBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-white/80 hover:text-white flex items-center gap-1.5";
+            }
+
+            updateUIStrings();
+            renderArticles();
+        }
+
+        // Update All Static Strings Based on Language
+        function updateUIStrings() {
+            const t = translations[state.lang];
+            
+            document.getElementById('txt-status-portal').innerText = t.statusPortal;
+            document.getElementById('txt-logo-sub').innerText = t.logoSub;
+            document.getElementById('txt-nav-home').innerText = t.navHome;
+            document.getElementById('txt-nav-finanze').innerText = t.navFinanze;
+            document.getElementById('txt-nav-pa').innerText = t.navPa;
+            document.getElementById('txt-nav-consigliati').innerText = t.navConsigliati;
+            document.getElementById('txt-nav-novita').innerText = t.navNovita;
+
+            document.getElementById('txt-m-home').innerText = t.navHome;
+            document.getElementById('txt-m-finanze').innerText = t.navFinanze;
+            document.getElementById('txt-m-pa').innerText = t.navPa;
+            document.getElementById('txt-m-consigliati').innerText = t.navConsigliati;
+            document.getElementById('txt-m-novita').innerText = t.navNovita;
+
+            document.getElementById('txt-a11y-btn').innerText = t.a11yBtn;
+            document.getElementById('txt-a11y-title').innerText = t.a11yTitle;
+            document.getElementById('txt-a11y-zoom').innerText = t.a11yZoom;
+            document.getElementById('txt-a11y-dyslexia').innerText = t.a11yDyslexia;
+            document.getElementById('txt-a11y-contrast').innerText = t.a11yContrast;
+            document.getElementById('txt-a11y-highlight').innerText = t.a11yHighlight;
+            document.getElementById('txt-a11y-guide').innerText = t.a11yGuide;
+            document.getElementById('txt-a11y-stop-tts').innerText = t.a11yStopTts;
+
+            document.getElementById('txt-hero-title').innerHTML = t.heroTitle;
+            document.getElementById('txt-hero-subtitle').innerText = t.heroSubtitle;
+            document.getElementById('main-search-input').placeholder = t.searchPlaceholder;
+            document.getElementById('txt-quick-tags').innerText = t.quickTags;
+
+            document.getElementById('txt-filter-age-label').innerText = t.ageLabel;
+            document.getElementById('txt-filter-region-label').innerText = t.regionLabel;
+            document.getElementById('opt-age-all').innerText = t.ageAll;
+            document.getElementById('opt-age-under30').innerText = t.ageUnder30;
+            document.getElementById('opt-age-3050').innerText = t.age3050;
+            document.getElementById('opt-age-over50').innerText = t.ageOver50;
+            document.getElementById('opt-reg-all').innerText = t.regAll;
+
+            document.getElementById('txt-reset-filters').innerText = t.resetFilters;
+            document.getElementById('txt-no-results-title').innerText = t.noResultsTitle;
+            document.getElementById('txt-no-results-desc').innerText = t.noResultsDesc;
+            document.getElementById('txt-modal-tts').innerText = t.modalTts;
+
+            document.getElementById('txt-ai-subtitle').innerText = t.aiSubtitle;
+            document.getElementById('txt-ai-welcome').innerHTML = t.aiWelcome;
+            document.getElementById('txt-ai-welcome-2').innerText = t.aiWelcome2;
+
+            // Update View Header Text
+            updateViewHeader();
+        }
+
+        // Navigation Engine
+        function navigateTo(view) {
+            state.currentView = view;
+            
+            // Highlight nav items
+            const navs = ['home', 'finanze', 'pa', 'consigliati', 'novita'];
+            navs.forEach(n => {
+                const btn = document.getElementById(`nav-${n}`);
+                if (btn) {
+                    if (n === view) {
+                        btn.className = "nav-btn px-3.5 py-2 rounded-lg transition-colors bg-white/10 text-brandCoral font-bold flex items-center gap-2";
+                    } else {
+                        btn.className = "nav-btn px-3.5 py-2 rounded-lg transition-colors hover:bg-white/10 text-white flex items-center gap-2";
+                    }
+                }
+            });
+
+            updateViewHeader();
+            renderArticles();
+        }
+
+        // Update Section View Title
+        function updateViewHeader() {
+            const t = translations[state.lang];
+            const titleEl = document.getElementById('view-title');
+            const subEl = document.getElementById('view-subtitle');
+
+            switch(state.currentView) {
+                case 'finanze':
+                    titleEl.innerHTML = `<i class="fa-solid fa-wallet text-brandCoral"></i> <span>${t.secFinanze}</span>`;
+                    subEl.innerText = t.secFinanzeSub;
+                    break;
+                case 'pa':
+                    titleEl.innerHTML = `<i class="fa-solid fa-building-columns text-brandCoral"></i> <span>${t.secPA}</span>`;
+                    subEl.innerText = t.secPASub;
+                    break;
+                case 'consigliati':
+                    titleEl.innerHTML = `<i class="fa-solid fa-star text-brandCoral"></i> <span>${t.secConsigliati}</span>`;
+                    subEl.innerText = t.secConsigliatiSub;
+                    break;
+                case 'novita':
+                    titleEl.innerHTML = `<i class="fa-solid fa-bullhorn text-brandCoral"></i> <span>${t.secNovita}</span>`;
+                    subEl.innerText = t.secNovitaSub;
+                    break;
+                default:
+                    titleEl.innerHTML = `<i class="fa-solid fa-layer-group text-brandCoral"></i> <span>Tutti gli Articoli e le Guide</span>`;
+                    subEl.innerText = "Procedure civiche e fiscali verificate aggiornate al 2026";
+            }
+        }
+
+        function renderArticles() {
+            const grid = document.getElementById('articles-grid');
+            const noResults = document.getElementById('no-results');
+            const countBadge = document.getElementById('results-count');
+            const t = translations[state.lang];
+
+            // Filter logic
+            const filtered = articlesDatabase.filter(art => {
+                // View Filter
+                if (state.currentView === 'finanze' && art.categoryKey !== 'finanze') return false;
+                if (state.currentView === 'pa' && art.categoryKey !== 'pa') return false;
+                if (state.currentView === 'consigliati') {
+                    if (state.filterAge !== 'all' && art.ageGroup !== 'all' && art.ageGroup !== state.filterAge) return false;
+                    if (state.filterRegion !== 'all' && art.region !== 'all' && art.region !== state.filterRegion) return false;
+                }
+
+                // Age Filter
+                if (state.filterAge !== 'all' && art.ageGroup !== 'all' && art.ageGroup !== state.filterAge) return false;
+
+                // Region Filter
+                if (state.filterRegion !== 'all' && art.region !== 'all' && art.region !== state.filterRegion) return false;
+
+                // Search Query Filter
+                if (state.searchQuery.trim() !== '') {
+                    const q = state.searchQuery.toLowerCase();
+                    const titleText = art.title[state.lang].toLowerCase();
+                    const summaryText = art.summary[state.lang].toLowerCase();
+                    const tagsText = art.tags.join(' ').toLowerCase();
+                    return titleText.includes(q) || summaryText.includes(q) || tagsText.includes(q);
+                }
+
+                return true;
+            });
+
+            countBadge.innerText = `${filtered.length} ${state.lang === 'it' ? 'Risultati' : 'Results'}`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+
+            // Render Articles Grid
+            grid.innerHTML = filtered.map(art => {
+                const title = art.title[state.lang];
+                const summary = art.summary[state.lang];
+                const content = art.content[state.lang];
+
+                return `
+                    <div class="bg-brandCreamCard rounded-2xl p-6 border-2 border-brandCreamDark shadow-md hover:shadow-xl transition-all duration-200 flex flex-col justify-between group">
+                        <div class="space-y-4">
+                            <!-- Card Category & Tags Header -->
+                            <div class="flex flex-wrap justify-between items-center gap-2">
+                                <span class="text-[11px] font-extrabold uppercase px-3 py-1 rounded-full ${art.categoryKey === 'finanze' ? 'bg-brandNavy text-white' : 'bg-brandCoral text-white'} tracking-wider shadow-sm">
+                                    ${art.category}
+                                </span>
+                                <div class="flex items-center space-x-1.5 text-xs text-gray-500 font-semibold">
+                                    <i class="fa-solid fa-location-dot text-brandCoral"></i>
+                                    <span>${art.region === 'all' ? (state.lang === 'it' ? 'Nazionale' : 'National') : art.region}</span>
+                                </div>
+                            </div>
+
+                            <!-- Title -->
+                            <h3 class="text-xl font-extrabold text-brandNavy group-hover:text-brandCoral transition-colors leading-snug">
+                                ${title}
+                            </h3>
+
+                            <!-- Summary -->
+                            <p class="text-xs sm:text-sm text-gray-700 leading-relaxed font-normal">
+                                ${summary}
+                            </p>
+
+                            <!-- Native Bulleted Highlights Preview -->
+                            <div class="bg-white p-3.5 rounded-xl border border-brandCreamDark/80 space-y-2 text-xs text-brandNavyDark">
+                                <div class="font-bold text-brandNavy flex items-center gap-1.5 border-b border-gray-100 pb-1">
+                                    <span>${t.overview}:</span>
+                                </div>
+                                <p class="text-gray-600 line-clamp-2">${content.sintesi}</p>
+                                
+                                <div class="pt-1 flex flex-wrap gap-2 text-[11px] text-gray-500 font-medium">
+                                    <span class="bg-brandCream px-2 py-0.5 rounded border border-brandCreamDark">
+                                        <i class="fa-solid fa-check text-emerald-600 mr-1"></i> ${content.requisiti.length} ${state.lang === 'it' ? 'Requisiti' : 'Requirements'}
+                                    </span>
+                                    <span class="bg-brandCream px-2 py-0.5 rounded border border-brandCreamDark">
+                                        <i class="fa-solid fa-calendar text-brandCoral mr-1"></i> 2026
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Button -->
+                        <div class="pt-5 mt-4 border-t border-brandCreamDark/60 flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                ${art.tags.map(tag => `<span class="text-[10px] bg-brandNavy/5 text-brandNavy px-2 py-0.5 rounded font-semibold">#${tag}</span>`).join('')}
+                            </div>
+                            <button onclick="openModal('${art.id}')" class="bg-brandNavy hover:bg-brandCoral text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 group-hover:scale-105">
+                                <span>${t.readMore}</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openModal(articleId) {
+            const art = articlesDatabase.find(a => a.id === articleId);
+            if (!art) return;
+
+            const modal = document.getElementById('article-modal');
+            const titleEl = document.getElementById('modal-title');
+            const catEl = document.getElementById('modal-category');
+            const bodyEl = document.getElementById('modal-body');
+            const regBadge = document.getElementById('modal-region-badge');
+            const t = translations[state.lang];
+
+            const c = art.content[state.lang];
+
+            titleEl.innerText = art.title[state.lang];
+            catEl.innerText = art.category;
+            regBadge.innerText = `${state.lang === 'it' ? 'Ambito' : 'Scope'}: ${art.region === 'all' ? (state.lang === 'it' ? 'Nazionale' : 'National') : art.region}`;
+
+            // Strict Bulleted Format Rendering
+            bodyEl.innerHTML = `
+                <!-- Overview Bullet -->
+                <div class="bg-brandCream/40 p-4 rounded-xl border border-brandCreamDark space-y-2">
+                    <h4 class="font-extrabold text-brandNavy text-lg flex items-center gap-2">
+                        <span>${t.overview}</span>
+                    </h4>
+                    <p class="text-gray-800 leading-relaxed">${c.sintesi}</p>
+                </div>
+
+                <!-- Requirements Bullet -->
+                <div class="space-y-2">
+                    <h4 class="font-extrabold text-brandNavy text-base flex items-center gap-2">
+                        <span>${t.requirements}</span>
+                    </h4>
+                    <ul class="list-disc pl-5 space-y-1.5 text-gray-700">
+                        ${c.requisiti.map(req => `<li class="pl-1">${req}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <!-- Benefits Bullet -->
+                <div class="space-y-2">
+                    <h4 class="font-extrabold text-brandNavy text-base flex items-center gap-2">
+                        <span>${t.benefits}</span>
+                    </h4>
+                    <ul class="list-disc pl-5 space-y-1.5 text-gray-700">
+                        ${c.importi.map(imp => `<li class="pl-1 font-semibold text-emerald-800">${imp}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <!-- Deadlines Bullet -->
+                <div class="space-y-2">
+                    <h4 class="font-extrabold text-brandNavy text-base flex items-center gap-2">
+                        <span>${t.deadlines}</span>
+                    </h4>
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-3 text-amber-900 rounded-r-lg font-medium">
+                        ${c.scadenze}
+                    </div>
+                </div>
+
+                <!-- How to Apply Bullet -->
+                <div class="space-y-2">
+                    <h4 class="font-extrabold text-brandNavy text-base flex items-center gap-2">
+                        <span>${t.howToApply}</span>
+                    </h4>
+                    <p class="text-gray-800 bg-white p-3 rounded-xl border border-gray-200">${c.comeFare}</p>
+                </div>
+
+                <!-- Official Links -->
+                <div class="space-y-2 pt-2 border-t border-gray-200">
+                    <h4 class="font-extrabold text-brandNavy text-base flex items-center gap-2">
+                        <span>${t.officialLinks}</span>
+                    </h4>
+                    <div class="flex flex-wrap gap-3">
+                        ${c.links.map(link => `
+                            <a href="${link.url}" target="_blank" class="bg-brandNavy hover:bg-brandCoral text-white text-xs px-3.5 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-sm">
+                                <span>${link.name}</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Save active article text for TTS
+            state.currentlySpeakingText = `${art.title[state.lang]}. ${c.sintesi}. Requisiti: ${c.requisiti.join('. ')}`;
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('article-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            stopSpeech();
+        }
+
+        // Text-To-Speech (SpeechSynthesis API)
+        function speakCurrentArticle() {
+            if (!('speechSynthesis' in window)) {
+                alert("La sintesi vocale non è supportata dal tuo browser.");
+                return;
+            }
+
+            window.speechSynthesis.cancel(); // Stop current speech
+
+            if (!state.currentlySpeakingText) return;
+
+            const utterance = new SpeechSynthesisUtterance(state.currentlySpeakingText);
+            utterance.lang = state.lang === 'it' ? 'it-IT' : 'en-US';
+            utterance.rate = 0.95;
+
+            const stopBtn = document.getElementById('btn-stop-tts');
+            stopBtn.classList.remove('hidden');
+
+            utterance.onend = () => {
+                stopBtn.classList.add('hidden');
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            document.getElementById('btn-stop-tts').classList.add('hidden');
+        }
+
+        function handleSearchInput() {
+            const input = document.getElementById('main-search-input');
+            const clearBtn = document.getElementById('btn-clear-search');
+            state.searchQuery = input.value;
+
+            if (state.searchQuery.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            updateFilterStatusBar();
+            renderArticles();
+        }
+
+        function clearSearch() {
+            document.getElementById('main-search-input').value = '';
+            state.searchQuery = '';
+            document.getElementById('btn-clear-search').classList.add('hidden');
+            updateFilterStatusBar();
+            renderArticles();
+        }
+
+        function setTagFilter(tag) {
+            document.getElementById('main-search-input').value = tag;
+            state.searchQuery = tag;
+            document.getElementById('btn-clear-search').classList.remove('hidden');
+            updateFilterStatusBar();
+            renderArticles();
+        }
+
+        function applyFilters() {
+            state.filterAge = document.getElementById('filter-age').value;
+            state.filterRegion = document.getElementById('filter-region').value;
+            updateFilterStatusBar();
+            renderArticles();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('main-search-input').value = '';
+            state.searchQuery = '';
+            state.filterAge = 'all';
+            state.filterRegion = 'all';
+            document.getElementById('filter-age').value = 'all';
+            document.getElementById('filter-region').value = 'all';
+            document.getElementById('btn-clear-search').classList.add('hidden');
+            updateFilterStatusBar();
+            renderArticles();
+        }
+
+        function updateFilterStatusBar() {
+            const bar = document.getElementById('filter-status-bar');
+            const text = document.getElementById('filter-status-text');
+
+            const hasSearch = state.searchQuery.trim().length > 0;
+            const hasAge = state.filterAge !== 'all';
+            const hasReg = state.filterRegion !== 'all';
+
+            if (hasSearch || hasAge || hasReg) {
+                bar.classList.remove('hidden');
+                let parts = [];
+                if (hasSearch) parts.push(`Ricerca: "${state.searchQuery}"`);
+                if (hasAge) parts.push(`Età: ${state.filterAge}`);
+                if (hasReg) parts.push(`Regione: ${state.filterRegion}`);
+                text.innerText = `Filtri Attivi: ${parts.join(' | ')}`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function toggleAccessibilityToolbar() {
+            const bar = document.getElementById('a11y-toolbar');
+            bar.classList.toggle('hidden');
+        }
+
+        function changeFontSize(delta) {
+            state.fontSizeOffset += delta;
+            if (state.fontSizeOffset > 4) state.fontSizeOffset = 4;
+            if (state.fontSizeOffset < -2) state.fontSizeOffset = -2;
+
+            const newSize = 100 + (state.fontSizeOffset * 10);
+            document.documentElement.style.fontSize = `${newSize}%`;
+        }
+
+        function resetFontSize() {
+            state.fontSizeOffset = 0;
+            document.documentElement.style.fontSize = '100%';
+        }
+
+        function toggleDyslexiaFont() {
+            state.isDyslexiaFont = !state.isDyslexiaFont;
+            const body = document.getElementById('app-body');
+            const btn = document.getElementById('btn-dyslexia');
+
+            if (state.isDyslexiaFont) {
+                body.classList.add('font-dyslexia');
+                btn.classList.add('bg-brandCoral', 'text-white');
+            } else {
+                body.classList.remove('font-dyslexia');
+                btn.classList.remove('bg-brandCoral', 'text-white');
+            }
+        }
+
+        function toggleHighContrast() {
+            state.isHighContrast = !state.isHighContrast;
+            const body = document.getElementById('app-body');
+            const btn = document.getElementById('btn-contrast');
+
+            if (state.isHighContrast) {
+                body.classList.add('high-contrast');
+                btn.classList.add('bg-amber-400', 'text-black');
+            } else {
+                body.classList.remove('high-contrast');
+                btn.classList.remove('bg-amber-400', 'text-black');
+            }
+        }
+
+        function toggleHighlightElements() {
+            state.isHighlightElements = !state.isHighlightElements;
+            const body = document.getElementById('app-body');
+            const btn = document.getElementById('btn-highlight');
+
+            if (state.isHighlightElements) {
+                body.classList.add('highlight-elements');
+                btn.classList.add('bg-brandCoral', 'text-white');
+            } else {
+                body.classList.remove('highlight-elements');
+                btn.classList.remove('bg-brandCoral', 'text-white');
+            }
+        }
+
+        function toggleReadingGuide() {
+            state.isReadingGuide = !state.isReadingGuide;
+            const body = document.getElementById('app-body');
+            const btn = document.getElementById('btn-guide');
+            const mask = document.getElementById('reading-guide-mask');
+
+            if (state.isReadingGuide) {
+                body.classList.add('reading-guide-active');
+                btn.classList.add('bg-emerald-500', 'text-white');
+                window.addEventListener('mousemove', updateReadingGuidePos);
+            } else {
+                body.classList.remove('reading-guide-active');
+                btn.classList.remove('bg-emerald-500', 'text-white');
+                window.removeEventListener('mousemove', updateReadingGuidePos);
+            }
+        }
+
+        function updateReadingGuidePos(e) {
+            const mask = document.getElementById('reading-guide-mask');
+            const y = e.clientY;
+            const height = 60; // Focus Window Height
+            mask.style.clipPath = `polygon(0% 0%, 100% 0%, 100% ${y - height/2}px, 0% ${y - height/2}px, 0% ${y + height/2}px, 100% ${y + height/2}px, 100% 100%, 0% 100%)`;
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleAiDrawer() {
+            const drawer = document.getElementById('ai-drawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function sendQuickPrompt(promptText) {
+            document.getElementById('ai-chat-input').value = promptText;
+            sendChatMessage();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            state.uploadedFile = file;
+            const preview = document.getElementById('upload-preview');
+            const nameSpan = document.getElementById('upload-file-name');
+
+            nameSpan.innerText = file.name;
+            preview.classList.remove('hidden');
+        }
+
+        function removeUpload() {
+            state.uploadedFile = null;
+            document.getElementById('file-upload-input').value = '';
+            document.getElementById('upload-preview').classList.add('hidden');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const query = input.value.trim();
+            const container = document.getElementById('chat-messages');
+
+            if (!query && !state.uploadedFile) return;
+
+            // Render User Message
+            const userMsg = document.createElement('div');
+            userMsg.className = "bg-brandNavy text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] ml-auto text-xs sm:text-sm space-y-1";
+            
+            let userContent = query;
+            if (state.uploadedFile) {
+                userContent = `📎 <em>[Documento Allegato: ${state.uploadedFile.name}]</em><br>${query}`;
+            }
+            userMsg.innerHTML = userContent;
+            container.appendChild(userMsg);
+
+            input.value = '';
+
+            // AI Processing Typing Indicator
+            const typingMsg = document.createElement('div');
+            typingMsg.className = "bg-white p-3 rounded-2xl rounded-tl-none border border-brandCreamDark text-gray-500 text-xs italic max-w-[80%]";
+            typingMsg.id = "typing-indicator";
+            typingMsg.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-brandCoral mr-2"></i> FinPratica AI sta elaborando...`;
+            container.appendChild(typingMsg);
+
+            container.scrollTop = container.scrollHeight;
+
+            // Generate Smart Response Simulation
+            setTimeout(() => {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) indicator.remove();
+
+                const aiReply = document.createElement('div');
+                aiReply.className = "bg-white p-3.5 rounded-2xl rounded-tl-none border border-brandCreamDark shadow-sm max-w-[88%] text-brandNavyDark text-xs sm:text-sm space-y-2";
+
+                let replyText = "";
+
+                if (state.uploadedFile) {
+                    replyText = `📄 <strong>Analisi del Documento "${state.uploadedFile.name}":</strong><br>
+                    • <strong>Tipo Riconosciuto:</strong> Modello F24 / Bolletta Fiscale.<br>
+                    • <strong>Stato:</strong> In attesa di pagamento scadenziato.<br>
+                    • <strong>Consiglio:</strong> Puoi effettuare il saldo in sicurezza tramite il servizio PagoPA dell'Agenzia delle Entrate oppure tramite l'Home Banking della tua banca.`;
+                    removeUpload();
+                } else if (query.toLowerCase().includes('bonus') || query.toLowerCase().includes('casa')) {
+                    replyText = `🏠 <strong>Informazioni sul Bonus Prima Casa 2026:</strong><br>
+                    L'agevolazione offre l'esenzione dalle imposte di registro, ipotecaria e catastale per i giovani under 36 con ISEE inferiore a 40.000 €. Puoi consultare il dettaglio completo nella sezione <strong>Finanze</strong>.`;
+                } else if (query.toLowerCase().includes('730') || query.toLowerCase().includes('tasse')) {
+                    replyText = `📊 <strong>Modello 730 Semplificato:</strong><br>
+                    La presentazione della dichiarazione precompilata apre ad Aprile 2026 sul sito dell'Agenzia delle Entrate. I rimborsi spettanti vengono accreditati direttamente nello stipendio di Luglio.`;
+                } else {
+                    replyText = `💡 <strong>Risposta Assistente FinPratica:</strong><br>
+                    Per la richiesta riguardante "${query}", ti consiglio di verificare la presenza dei requisiti ISEE e di accedere tramite SPID/CIE al portale dell'INPS o dell'Agenzia delle Entrate. Serve ulteriore supporto su una specifica scadenza?`;
+                }
+
+                aiReply.innerHTML = replyText;
+                container.appendChild(aiReply);
+                container.scrollTop = container.scrollHeight;
+
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
